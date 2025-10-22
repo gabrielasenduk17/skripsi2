@@ -1,0 +1,9 @@
+pandas
+flask
+matplotlib
+numpy
+tensorflow
+scikit-learn
+joblib
+statsmodels
+h5py
