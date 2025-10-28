@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Stockify — Stock Prediction System</title>
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Hubungkan CSS (dari folder static) -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="logo">
+        <!-- Gunakan Flask url_for untuk akses logo -->
+        <img src="{{ url_for('static', filename='logo2.png') }}" alt="Stockify Logo" class="logo-img">
+        <div>
+          <div class="title">Stockify</div>
+          <div class="subtitle">Predict your stock trends in seconds</div>
+        </div>
+      </div>
+    </header>
+
+    <div class="main">
+      <!-- LEFT -->
+      <div>
+        <div class="card">
+          <form id="uploadForm" action="/predict" method="POST" enctype="multipart/form-data">
+            <div class="upload-area">
+              <label class="btn-file" for="fileInput">Add File</label>
+              <input id="fileInput" name="file" type="file" accept=".csv" style="display:none" required>
+              <div class="file-name" id="fileName">No file selected</div>
+              <div class="note">Supported: <strong>.csv</strong></div>
+            </div>
+            <button class="predict-btn" id="predictBtn" disabled>Predict</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div>
+        <div class="result-card">
+          <div class="result-title">Prediction Result</div>
+          <div class="chart">
+            <img id="resultImage" src="" alt="Prediction Chart" style="max-width:550px; display:none; border-radius:12px;">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Script -->
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const fileName = document.getElementById('fileName');
+    const predictBtn = document.getElementById('predictBtn');
+    const form = document.getElementById('uploadForm');
+    const resultImage = document.getElementById('resultImage');
+
+    // tampilkan nama file
+    fileInput.addEventListener('change', e => {
+      if(e.target.files.length > 0){
+        fileName.textContent = e.target.files[0].name;
+        predictBtn.disabled = false;
+      }
+    });
+
+    // kirim form tanpa reload halaman
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(form);
+      const response = await fetch('/predict', {
+        method: 'POST',
+        body: formData
+      });
+
+      // convert response ke blob (karena Flask kirim gambar PNG)
+      const blob = await response.blob();
+      const imageUrl = URL.createObjectURL(blob);
+      resultImage.src = imageUrl;
+      resultImage.style.display = 'block';
+    });
+  </script>
+</body>
+</html>

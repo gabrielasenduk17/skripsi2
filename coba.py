@@ -1,0 +1,139 @@
+# === 1. Import Library ===
+from flask import Flask, render_template, request, send_file
+import pandas as pd
+import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Agar bisa dijalankan di server tanpa GUI
+import matplotlib.pyplot as plt
+import io
+import joblib
+from tensorflow.keras.models import load_model
+from sklearn.preprocessing import MinMaxScaler
+
+# === 2. Inisialisasi Aplikasi Flask ===
+app = Flask(__name__)
+
+# === 3. Load Model Saat Server Dijalankan ===
+arima_model = joblib.load("model/arima_model.pkl")
+lstm_model = load_model("model/hybrid_lstm_model.h5", compile=False)
+
+# === 4. Fungsi Prediksi Saham ===
+def predict_stocks(df, n_forecast=30):
+    data = df["adj_close"].values
+
+    # --- ARIMA Forecast ---
+    arima_forecast = arima_model.forecast(steps=n_forecast)
+
+    # --- LSTM Forecast ---
+    scaler = MinMaxScaler(feature_range=(0, 1))
+    scaled_data = scaler.fit_transform(data.reshape(-1, 1))
+
+    window = 10
+    last_window = scaled_data[-window:]
+    cur_input = last_window.reshape(1, window, 1)
+
+    forecast_lstm = []
+    for _ in range(n_forecast):
+        pred = lstm_model.predict(cur_input, verbose=0)[0][0]
+        forecast_lstm.append(pred)
+        # Update window input secara bergulir (sliding window)
+        cur_input = np.append(cur_input[:, 1:, :], [[[pred]]], axis=1)
+
+    # Balikkan ke skala asli
+    forecast_lstm = scaler.inverse_transform(
+        np.array(forecast_lstm).reshape(-1, 1)
+    ).flatten()
+
+    # --- Hybrid Forecast (rata-rata ARIMA dan LSTM) ---
+    hybrid_forecast = (arima_forecast + forecast_lstm) / 2.0
+
+    return data, arima_forecast, forecast_lstm, hybrid_forecast
+
+
+# === 5. Fungsi Plot Hasil Prediksi ===
+def plot_results(history, arima_forecast, lstm_forecast, hybrid_forecast):
+    plt.figure(figsize=(10, 6))
+    plt.plot(history, label="History")
+    plt.plot(
+        range(len(history), len(history) + len(arima_forecast)),
+        arima_forecast,
+        "r--",
+        label="ARIMA Forecast",
+    )
+    plt.plot(
+        range(len(history), len(history) + len(lstm_forecast)),
+        lstm_forecast,
+        "g--",
+        label="LSTM Forecast",
+    )
+    plt.plot(
+        range(len(history), len(history) + len(hybrid_forecast)),
+        hybrid_forecast,
+        "b",
+        label="Hybrid Forecast",
+        linewidth=2,
+    )
+
+    plt.legend()
+    plt.title("Hybrid ARIMA-LSTM Stock Prediction")
+    plt.xlabel("Time")
+    plt.ylabel("Price")
+    plt.tight_layout()
+
+    # Simpan plot ke buffer
+    img = io.BytesIO()
+    plt.savefig(img, format="png")
+    img.seek(0)
+    plt.close()
+    return img
+
+
+# === 6. Wrapper: Cek Kolom dan Jalankan Prediksi ===
+def predict_stock(df, n_forecast=30):
+    # Cari kolom harga penutupan
+    possible_cols = ["adj_close", "Adj Close", "close", "Close"]
+    col_name = None
+
+    for c in possible_cols:
+        if c in df.columns:
+            col_name = c
+            break
+
+    if col_name is None:
+        raise ValueError(
+            f"Kolom harga penutupan tidak ditemukan. Kolom yang tersedia: {list(df.columns)}"
+        )
+
+    # Ubah nama kolom agar seragam
+    df = df.rename(columns={col_name: "adj_close"})
+
+    # Jalankan fungsi prediksi utama
+    history, arima_forecast, lstm_forecast, hybrid_forecast = predict_stocks(
+        df, n_forecast
+    )
+
+    return history, arima_forecast, lstm_forecast, hybrid_forecast
+
+
+# === 7. Routes ===
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+
+@app.route("/predict", methods=["POST"])
+def predict():
+    file = request.files["file"]
+    df = pd.read_csv(file)
+
+    # Jalankan prediksi
+    history, arima_f, lstm_f, hybrid_f = predict_stock(df)
+
+    # Buat plot hasil
+    img = plot_results(history, arima_f, lstm_f, hybrid_f)
+    return send_file(img, mimetype="image/png")
+
+
+# === 8. Jalankan Aplikasi ===
+if __name__ == "__main__":
+    app.run(debug=True)

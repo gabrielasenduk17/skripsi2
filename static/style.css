@@ -1,0 +1,143 @@
+:root{
+  --bg: #f6f8fb;
+  --card: #ffffff;
+  --muted: #6b7280;
+  --primary: #1578ff;
+  --success: #28a745;
+  --radius: 14px;
+  --shadow: 0 8px 30px rgba(16,24,40,0.08);
+}
+body{
+  margin:0;
+  font-family: "Poppins", sans-serif;
+  background: linear-gradient(180deg, var(--bg), #fbfdff 60%);
+  color: #111827;
+  padding: 48px;
+}
+
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+  background: var(--card);
+  border-radius: 18px;
+  padding: 40px;
+  box-shadow: var(--shadow);
+}
+
+header {
+  display:flex;
+  align-items:center;
+  gap:18px;
+  margin-bottom: 24px;
+}
+.logo {
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+.logo-img {
+  height:120px;
+  display:block;
+}
+.title {
+  font-size: 28px;
+  font-weight:700;
+  letter-spacing: -0.02em;
+}
+.subtitle {
+  margin-top:6px;
+  color:var(--muted);
+  font-weight:500;
+  font-size:14px;
+}
+
+.main {
+  display:grid;
+  grid-template-columns: 420px 1fr;
+  gap: 28px;
+  align-items:start;
+  margin-top: 18px;
+}
+
+/* Upload area */
+.card {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 22px;
+  box-shadow: 0 4px 18px rgba(16,24,40,0.04);
+  border: 1px solid rgba(16,24,40,0.03);
+}
+.upload-area {
+  text-align:center;
+  padding: 28px 16px;
+  border-radius: 10px;
+  border: 1px dashed rgba(16,24,40,0.06);
+  margin-bottom: 18px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(250,250,250,0.6));
+}
+.btn-file {
+  display:inline-block;
+  background: var(--primary);
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-weight:600;
+  cursor:pointer;
+  border: none;
+}
+.file-name{
+  margin-top:12px;
+  color:var(--muted);
+  font-size:13px;
+}
+.note {
+  margin-top:8px;
+  color:var(--muted);
+  font-size:13px;
+}
+.predict-btn {
+  display:block;
+  width:100%;
+  padding: 14px;
+  margin-top: 8px;
+  background: var(--success);
+  color:white;
+  text-align:center;
+  border-radius: 12px;
+  font-weight:700;
+  font-size:15px;
+  cursor:pointer;
+  border:none;
+}
+.predict-btn[disabled]{
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Result card */
+.result-card {
+  padding: 22px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 6px 22px rgba(16,24,40,0.04);
+}
+.result-title {
+  font-weight:700;
+  font-size:20px;
+  margin-bottom: 40px;
+}
+.big-number {
+  font-size:42px;
+  font-weight:800;
+  margin-bottom: 14px;
+}
+.chart {
+  width:100%;
+  height:220px;
+  border-radius:10px;
+  background: #f9fafb;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:16px;
+}
